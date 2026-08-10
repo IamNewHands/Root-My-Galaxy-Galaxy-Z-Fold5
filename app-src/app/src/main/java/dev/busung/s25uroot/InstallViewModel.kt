@@ -181,6 +181,7 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
 
     private suspend fun executeExploit(payload: File) {
         val shizuku = shizukuEnabled()
+        appendLog("[diag] shizukuEnabled=$shizuku isRunning=${ShizukuController.isRunning()} isGranted=${ShizukuController.isGranted()}")
         val logFile = if (shizuku) File(SHIZUKU_LOG_PATH) else File(app.filesDir, "exploit.log")
         if (shizuku) {
             ShizukuController.exec(arrayOf("rm", "-f", SHIZUKU_LOG_PATH)).waitFor()
@@ -188,6 +189,7 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
             logFile.delete()
         }
         val helper = helperFile()
+        appendLog("[diag] helper=${helper.absolutePath}")
         if (!shizuku) {
             require(helper.canExecute()) { app.getString(R.string.error_helper_unavailable) }
         }
@@ -195,11 +197,19 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         val bootToken = currentBootToken()
         val process = if (shizuku) {
             val stagedPayload = shizukuStage(payload, SHIZUKU_PAYLOAD_PATH, "755")
+            appendLog("[diag] Shizuku branch: payload=${stagedPayload.absolutePath}")
             ShizukuController.exec(
-                arrayOf("/system/bin/sh", "-c", "true"),
+                arrayOf(
+                    helper.absolutePath,
+                    "--run-payload",
+                    stagedPayload.absolutePath,
+                    helper.absolutePath,
+                    SHIZUKU_LOG_PATH,
+                ),
                 shizukuEnvironment(bootToken, stagedPayload.absolutePath, helper.absolutePath),
             )
         } else {
+            appendLog("[diag] App branch: payload=${payload.absolutePath}")
             val processBuilder = ProcessBuilder(
                 helper.absolutePath,
                 "--run-payload",
@@ -404,7 +414,6 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         add("P0_ATTEMPT_TIMEOUT_SEC=$P0_ATTEMPT_TIMEOUT_SEC")
         add("EXPLOIT_ATTEMPT_TIMEOUT_SEC=$EXPLOIT_ATTEMPT_TIMEOUT_SEC")
         add("CVE43499_ROOT_HELPER=$helperPath")
-        add("LD_PRELOAD=$payloadPath")
         cachedP0Offset(bootToken)?.let { add("$P0_OFFSET_ENV=$it") }
     }.toTypedArray()
 
