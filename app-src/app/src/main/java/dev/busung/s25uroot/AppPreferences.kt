@@ -66,7 +66,7 @@ object AppPreferences {
     }
 
     fun shizukuMode(context: Context): Boolean =
-        prefs(context).getBoolean(SHIZUKU_MODE, false)
+        prefs(context).getBoolean(SHIZUKU_MODE, true)
 
     fun setShizukuMode(context: Context, enabled: Boolean) {
         prefs(context).edit()
