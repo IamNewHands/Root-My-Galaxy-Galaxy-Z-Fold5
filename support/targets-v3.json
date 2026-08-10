@@ -18,11 +18,11 @@
       ],
       "kernelVersions": ["5.15.189"],
       "exploit": {
-        "url": "https://raw.githubusercontent.com/youyoudezhuzhu/rmg-f731u/main/artifacts/f731u-F731USQS8GZF1/cve-2026-43499-app.so",
+        "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/artifacts/f731u-F731USQS8GZF1/cve-2026-43499-app.so",
         "size": 104128
       },
       "kernelsu": {
-        "url": "https://raw.githubusercontent.com/youyoudezhuzhu/rmg-f731u/main/kernelsu/ksud-f731u-kdp",
+        "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/kernelsu/ksud-f731u-kdp",
         "size": 4895288
       }
     }

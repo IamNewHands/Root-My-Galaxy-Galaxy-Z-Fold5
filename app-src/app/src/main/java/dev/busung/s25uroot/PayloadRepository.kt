@@ -99,11 +99,12 @@ class PayloadRepository(private val context: Context) {
         return commit
     }
 
-    private fun rawUrl(commit: String, path: String) = "$RAW_REPOSITORY/$commit/$path"
+    private fun rawUrl(commit: String, path: String) =
+        "$RAW_REPOSITORY@$commit/$path"
 
     private fun pinArtifactUrl(url: String, commit: String): String {
         require(url.startsWith(MUTABLE_RAW_PREFIX)) { context.getString(R.string.repo_url_invalid) }
-        return "$RAW_REPOSITORY/$commit/${url.removePrefix(MUTABLE_RAW_PREFIX)}"
+        return "$RAW_REPOSITORY@$commit/${url.removePrefix(MUTABLE_RAW_PREFIX)}"
     }
 
     private fun downloadBytes(url: String, maximum: Int): ByteArray {
@@ -138,9 +139,12 @@ class PayloadRepository(private val context: Context) {
     companion object {
         private const val COMMIT_API_URL =
             "https://api.github.com/repos/youyoudezhuzhu/rmg-f731u/git/ref/heads/main"
+        /* v0.2.21: raw.githubusercontent.com 在大陆常被 CDN 缓存旧文件，
+         * 导致 App 永远拉到旧 exploit（校验 size 相同但内容旧）。
+         * 改用 jsdelivr CDN（全球节点、无污染缓存、commit-pinned 不可变）。 */
         private const val RAW_REPOSITORY =
-            "https://raw.githubusercontent.com/youyoudezhuzhu/rmg-f731u"
-        private const val MUTABLE_RAW_PREFIX = "$RAW_REPOSITORY/main/"
+            "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u"
+        private const val MUTABLE_RAW_PREFIX = "$RAW_REPOSITORY@main/"
         private const val MAX_COMMIT_RESPONSE_BYTES = 16 * 1024
         private const val MAX_MANIFEST_BYTES = 256 * 1024
     }
