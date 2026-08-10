@@ -60,12 +60,12 @@ class PayloadRepository(private val context: Context) {
     private fun bundledExploit(directory: File, onProgress: (String) -> Unit): File? {
         return try {
             val destination = File(directory, "cve-2026-43499-app.so")
-            context.assets.open("cve-2026-43499-app.so").use { input ->
-                FileOutputStream(destination).use { output ->
+            FileOutputStream(destination).use { output ->
+                context.assets.open("cve-2026-43499-app.so").use { input ->
                     input.copyTo(output)
                 }
+                output.fd.sync()
             }
-            output.fd.sync()
             onProgress(context.getString(R.string.artifact_exploit_bundled))
             destination
         } catch (e: Throwable) {
