@@ -1,0 +1,46 @@
+name: Build F731U APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept SDK licenses
+        run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Install NDK 28
+        run: |
+          sdkmanager "ndk;28.2.13612045" > /dev/null 2>&1 || sdkmanager "ndk;28.1.14206865" > /dev/null 2>&1 || echo "NDK installed via fallback"
+
+      - name: Build APK
+        working-directory: app-src
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rmg-f731u-apk
+          path: app-src/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
