@@ -35,12 +35,16 @@ class PayloadRepository(private val context: Context) {
 
     fun download(profile: TargetProfile, onProgress: (String) -> Unit): VerifiedPayloads {
         val directory = File(context.filesDir, "payloads/${profile.profileId}").apply { mkdirs() }
-        val exploit = downloadArtifact(
-            profile.exploit,
-            File(directory, "cve-2026-43499-app.so"),
-            context.getString(R.string.artifact_exploit),
-            onProgress,
-        )
+        /* v0.2.21+: 优先使用 APK 内嵌的 exploit（assets/cve-2026-43499-app.so）。
+         * 内嵌版本随 APK 一起发布，绝不依赖网络下载，彻底避免 CDN 缓存旧文件
+         * 导致 App 一直跑旧 exploit 的问题。网络下载仅作为 fallback。 */
+        val exploit = bundledExploit(directory, onProgress)
+            ?: downloadArtifact(
+                profile.exploit,
+                File(directory, "cve-2026-43499-app.so"),
+                context.getString(R.string.artifact_exploit),
+                onProgress,
+            )
         val kernelSu = downloadArtifact(
             profile.kernelSu,
             File(directory, "ksud-s25u-kdp"),
@@ -50,6 +54,23 @@ class PayloadRepository(private val context: Context) {
         Os.chmod(exploit.absolutePath, 0b100100100)
         Os.chmod(kernelSu.absolutePath, 0b100100100)
         return VerifiedPayloads(profile, exploit, kernelSu)
+    }
+
+    /** 从 APK assets 解出内嵌 exploit；失败返回 null（由调用方 fallback 到下载）。 */
+    private fun bundledExploit(directory: File, onProgress: (String) -> Unit): File? {
+        return try {
+            val destination = File(directory, "cve-2026-43499-app.so")
+            context.assets.open("cve-2026-43499-app.so").use { input ->
+                FileOutputStream(destination).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            output.fd.sync()
+            onProgress(context.getString(R.string.artifact_exploit_bundled))
+            destination
+        } catch (e: Throwable) {
+            null
+        }
     }
 
     private fun downloadArtifact(
