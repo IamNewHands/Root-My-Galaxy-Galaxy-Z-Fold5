@@ -397,9 +397,16 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
 
     private fun shizukuStage(source: File, target: String, mode: String): File {
         val staged = File(target)
-        if (staged.exists() && staged.length() == source.length()) return staged
+        // v0.2.29+: 不再复用旧文件（长度相同但内容可能损坏——bad ELF magic bug）。
+        // 总是先删除再写入，确保 /data/local/tmp 下是完整的新 payload。
         try {
+            ShizukuController.exec(arrayOf("rm", "-f", target)).waitFor()
             ShizukuController.writeFile(target, mode, source.inputStream())
+            // 写后验证：读回前 4 字节必须是 ELF magic (0x7f 'E' 'L' 'F')
+            val magic = ShizukuController.capture(arrayOf("sh", "-c", "head -c 4 '$target' | od -An -tx1 | tr -d ' \\n'"))
+            check(magic.contains("7f454c46")) {
+                "staged $target has bad magic: $magic"
+            }
         } catch (error: Throwable) {
             throw IllegalStateException(
                 app.getString(R.string.error_shizuku_stage, target, error.message.orEmpty()),

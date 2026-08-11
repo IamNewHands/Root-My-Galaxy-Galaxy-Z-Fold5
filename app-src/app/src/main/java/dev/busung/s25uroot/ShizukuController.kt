@@ -88,7 +88,8 @@ object ShizukuController {
     }
 
     fun writeFile(remotePath: String, mode: String, source: InputStream) {
-        val process = exec(arrayOf("sh", "-c", "cat > '$remotePath' && chmod $mode '$remotePath'"))
+        // v0.2.29+: 写入后用 wc -c 校验大小，防止 Shizuku 管道截断产生坏文件
+        val process = exec(arrayOf("sh", "-c", "cat > '$remotePath' && chmod $mode '$remotePath' && wc -c < '$remotePath'"))
         val exitCode = try {
             process.outputStream.use { output ->
                 source.use { input -> input.copyTo(output, DEFAULT_BUFFER_SIZE) }
