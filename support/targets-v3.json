@@ -21,11 +21,11 @@
    ],
    "exploit": {
     "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/artifacts/f731u-F731USQS8GZF1/cve-2026-43499-app.so",
-    "size": 104128
+    "size": 131072
    },
    "kernelsu": {
     "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/kernelsu/ksud-f731u-kdp",
-    "size": 4895288
+    "size": 6756208
    }
   }
  ]
