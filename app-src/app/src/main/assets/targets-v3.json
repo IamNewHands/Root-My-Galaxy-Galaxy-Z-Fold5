@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 3,
+  "payloads": [
+    {
+      "payloadId": "f731u-F731USQS8GZF1",
+      "displayName": "Galaxy Z Flip 5 | Kernel 5.15.189",
+      "models": [
+        "SM-F731U",
+        "SM-F731U1",
+        "SM-F731W",
+        "SM-F731B",
+        "SM-F731N",
+        "SM-F7310",
+        "SM-F731Q",
+        "SM-F731E",
+        "SM-F731T",
+        "SM-F731V"
+      ],
+      "kernelVersions": ["5.15.189"],
+      "exploit": {
+        "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/artifacts/f731u-F731USQS8GZF1/cve-2026-43499-app.so",
+        "size": 104128
+      },
+      "kernelsu": {
+        "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/kernelsu/ksud-f731u-kdp",
+        "size": 4895288
+      }
+    }
+  ]
+}

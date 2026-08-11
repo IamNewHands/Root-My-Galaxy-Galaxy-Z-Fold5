@@ -17,12 +17,11 @@ data class VerifiedPayloads(
 
 class PayloadRepository(private val context: Context) {
     fun loadTargets(): List<TargetProfile> {
-        val commit = resolveMainCommit()
-        val manifestBytes = downloadBytes(rawUrl(commit, "support/targets-v3.json"), MAX_MANIFEST_BYTES)
-        return SupportManifest.parse(manifestBytes).targets.map { profile -> profile.copy(
-            exploit = profile.exploit.copy(url = pinArtifactUrl(profile.exploit.url, commit)),
-            kernelSu = profile.kernelSu.copy(url = pinArtifactUrl(profile.kernelSu.url, commit)),
-        ) }
+        /* v0.2.24+: 完全离线——manifest 内嵌于 APK assets，不访问任何网络。 */
+        val manifestBytes = context.assets.open("targets-v3.json").use { input ->
+            input.readBytes()
+        }
+        return SupportManifest.parse(manifestBytes).targets
     }
 
     fun resolveTarget(snapshot: DeviceSnapshot): TargetProfile = loadTargets()
@@ -35,38 +34,41 @@ class PayloadRepository(private val context: Context) {
 
     fun download(profile: TargetProfile, onProgress: (String) -> Unit): VerifiedPayloads {
         val directory = File(context.filesDir, "payloads/${profile.profileId}").apply { mkdirs() }
-        /* v0.2.21+: 优先使用 APK 内嵌的 exploit（assets/cve-2026-43499-app.so）。
-         * 内嵌版本随 APK 一起发布，绝不依赖网络下载，彻底避免 CDN 缓存旧文件
-         * 导致 App 一直跑旧 exploit 的问题。网络下载仅作为 fallback。 */
-        val exploit = bundledExploit(directory, onProgress)
+        /* v0.2.24+: 完全离线包。exploit 与 KernelSU 均内嵌于 APK assets，
+         * 绝不从 GitHub/CDN 拉取任何 payload——装什么版本就跑什么版本，
+         * 彻底杜绝 CDN 缓存/网络波动/仓库变更导致的版本漂移。 */
+        val exploit = bundledAsset("cve-2026-43499-app.so", directory, onProgress,
+            context.getString(R.string.artifact_exploit_bundled))
             ?: downloadArtifact(
                 profile.exploit,
                 File(directory, "cve-2026-43499-app.so"),
                 context.getString(R.string.artifact_exploit),
                 onProgress,
             )
-        val kernelSu = downloadArtifact(
-            profile.kernelSu,
-            File(directory, "ksud-s25u-kdp"),
-            context.getString(R.string.artifact_kernelsu),
-            onProgress,
-        )
+        val kernelSu = bundledAsset("ksud-f731u-kdp", directory, onProgress,
+            context.getString(R.string.artifact_kernelsu_bundled))
+            ?: downloadArtifact(
+                profile.kernelSu,
+                File(directory, "ksud-s25u-kdp"),
+                context.getString(R.string.artifact_kernelsu),
+                onProgress,
+            )
         Os.chmod(exploit.absolutePath, 0b100100100)
         Os.chmod(kernelSu.absolutePath, 0b100100100)
         return VerifiedPayloads(profile, exploit, kernelSu)
     }
 
-    /** 从 APK assets 解出内嵌 exploit；失败返回 null（由调用方 fallback 到下载）。 */
-    private fun bundledExploit(directory: File, onProgress: (String) -> Unit): File? {
+    /** 从 APK assets 解出内嵌文件；失败返回 null（由调用方 fallback 到下载）。 */
+    private fun bundledAsset(name: String, directory: File, onProgress: (String) -> Unit, label: String): File? {
         return try {
-            val destination = File(directory, "cve-2026-43499-app.so")
+            val destination = File(directory, name)
             FileOutputStream(destination).use { output ->
-                context.assets.open("cve-2026-43499-app.so").use { input ->
+                context.assets.open(name).use { input ->
                     input.copyTo(output)
                 }
                 output.fd.sync()
             }
-            onProgress(context.getString(R.string.artifact_exploit_bundled))
+            onProgress(label)
             destination
         } catch (e: Throwable) {
             null
