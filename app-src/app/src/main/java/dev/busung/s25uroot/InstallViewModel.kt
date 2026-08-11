@@ -198,15 +198,15 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         val process = if (shizuku) {
             val stagedPayload = shizukuStage(payload, SHIZUKU_PAYLOAD_PATH, "755")
             appendLog("[diag] Shizuku branch: payload=${stagedPayload.absolutePath}")
+            // v0.2.26+: 新架构 payload 用 LD_PRELOAD 方式启动（对齐 F7310 App 命令）
+            // CVE43499_ROOT_HELPER=... EXPLOIT_ATTEMPTS=24 PSELECT_DELAY_USEC=20000 LD_PRELOAD=<payload> /system/bin/true
             ShizukuController.exec(
                 arrayOf(
-                    helper.absolutePath,
-                    "--run-payload",
-                    stagedPayload.absolutePath,
-                    helper.absolutePath,
-                    SHIZUKU_LOG_PATH,
+                    "/system/bin/sh",
+                    "-c",
+                    "CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS PSELECT_DELAY_USEC=20000 LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true",
                 ),
-                shizukuEnvironment(bootToken, stagedPayload.absolutePath, helper.absolutePath),
+                emptyArray(),
             )
         } else {
             appendLog("[diag] App branch: payload=${payload.absolutePath}")
@@ -266,7 +266,10 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                     earlyOutput.takeIf(String::isNotBlank)?.let { " ($it)" } ?: "",
                 )
             }
-            require(rawLog.contains("exploit completed") && rawLog.contains("done=1 root=1")) {
+            // v0.2.26+: 新架构成功标记是 stage=temporary-root-ready（老架构是 exploit completed done=1 root=1）
+            val newArchOk = rawLog.contains("temporary-root-ready")
+            val oldArchOk = rawLog.contains("exploit completed") && rawLog.contains("done=1 root=1")
+            require(newArchOk || oldArchOk) {
                 app.getString(R.string.error_success_marker)
             }
         } finally {
@@ -309,7 +312,8 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
 
     private fun installKernelSu(payloads: VerifiedPayloads) {
         if (shizukuEnabled()) {
-            shizukuStage(payloads.kernelSu, SHIZUKU_KSUD_PATH, "755")
+            // v0.2.26+: helper 硬编码 ksud 路径 /data/local/tmp/ksud-selected（F7310 版 helper）
+            shizukuStage(payloads.kernelSu, "/data/local/tmp/ksud-selected", "755")
             shizukuStage(payloads.kernelSu, SHIZUKU_KSUD_STAGE_PATH, "755")
             appendLog(app.getString(R.string.log_ksu_staged))
         } else {
