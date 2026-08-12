@@ -18,11 +18,11 @@ data class UpdateInfo(
     val releaseUrl: String,
 )
 
-const val ROOT_MY_GALAXY_URL = "https://github.com/BuSung-dev/Root-My-Galaxy"
+const val ROOT_MY_GALAXY_URL = "https://github.com/youyoudezhuzhu/rmg-f731u"
 
 object AppUpdater {
 
-    private const val GITHUB_API = "https://api.github.com/repos/BuSung-dev/Root-My-Galaxy"
+    private const val GITHUB_API = "https://api.github.com/repos/youyoudezhuzhu/rmg-f731u"
     private const val RELEASES_PAGE = "$ROOT_MY_GALAXY_URL/releases/latest"
 
     suspend fun fetchLatestRelease(): UpdateInfo? = withContext(Dispatchers.IO) {
@@ -64,7 +64,17 @@ object AppUpdater {
     }
 
     fun isUpdateAvailable(latestVersion: String, currentVersion: String): Boolean =
-        latestVersion.isNotEmpty() && latestVersion != currentVersion
+        latestVersion.isNotEmpty() && !sameVersion(latestVersion, currentVersion)
+
+    /**
+     * v0.2.35: 版本号比较容忍 "-f731u" 等机型后缀。
+     * Release tag 如 "v0.2.34-f731u" 与 App versionName "0.2.34" 应视为相同版本。
+     */
+    private fun sameVersion(a: String, b: String): Boolean {
+        val normA = a.trim().removePrefix("v").substringBefore("-").trim()
+        val normB = b.trim().removePrefix("v").substringBefore("-").trim()
+        return normA == normB && normA.isNotEmpty()
+    }
 
     suspend fun downloadApk(
         context: Context,
