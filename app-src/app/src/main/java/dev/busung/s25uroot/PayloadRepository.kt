@@ -50,6 +50,21 @@ class PayloadRepository(private val context: Context) {
     private fun bundledAsset(name: String, directory: File, onProgress: (String) -> Unit, label: String): File? {
         return try {
             val destination = File(directory, name)
+            // v0.2.36: 第二次运行修复——上次解出的文件被 chmod 0444（只读），
+            // 再次 FileOutputStream 写入会 Permission denied。
+            // 先删除旧文件（幂等），确保每次都能全新写入；删除失败则用 .tmp 新名兜底。
+            if (destination.exists()) {
+                if (!destination.delete()) {
+                    // 只读文件删不掉（极端情况）→ 换新名写入，避免 Permission denied
+                    val alt = File(directory, "${name}.${System.currentTimeMillis()}.tmp")
+                    FileOutputStream(alt).use { output ->
+                        context.assets.open(name).use { input -> input.copyTo(output) }
+                        output.fd.sync()
+                    }
+                    onProgress(label)
+                    return alt
+                }
+            }
             FileOutputStream(destination).use { output ->
                 context.assets.open(name).use { input ->
                     input.copyTo(output)
