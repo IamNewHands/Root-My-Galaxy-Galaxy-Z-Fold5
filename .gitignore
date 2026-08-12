@@ -1,0 +1,11 @@
+# 构建产物（不要提交到仓库）
+apk-out/
+apk-out-*/
+*.zip
+*.apk
+build/
+.gradle/
+local.properties
+.idea/
+*.iml
+.DS_Store
