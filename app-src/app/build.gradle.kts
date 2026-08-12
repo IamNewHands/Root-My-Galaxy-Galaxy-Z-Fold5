@@ -11,8 +11,8 @@ android {
         applicationId = "dev.busung.s25uroot"
         minSdk = 33
         targetSdk = 36
-        versionCode = 27
-        versionName = "0.2.33"
+        versionCode = 28
+        versionName = "0.2.34"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
