@@ -5,6 +5,7 @@ Root-My-Galaxy 移植版，内置支持 **SM-F731U/DS**（Z Flip 5 美版 T-Mobi
 
 > ✅ **2026-08-12 真机验证成功**：v0.2.34 首次尝试即 `temporary-root-ready`（bootstrap root + KernelSU 启用）。
 > 注意：临时 root，重启后失效，需重跑 App。
+> 📸 验证证据：[KernelSU 管理器截图](docs/SM-F731U-F731USQS8GZF1.md)
 
 ## 📦 Release（保留成功版本）
 
