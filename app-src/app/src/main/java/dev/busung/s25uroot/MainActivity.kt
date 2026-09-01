@@ -293,6 +293,9 @@ private fun RootApp(
     var showTargetPicker by remember { mutableStateOf(false) }
     var selectedProfile by remember { mutableStateOf<TargetProfile?>(null) }
     var compatibilityWarning by remember { mutableStateOf<CompatibilityWarning?>(null) }
+    var showShizukuGuideDialog by remember { mutableStateOf(false) }
+    var shizukuGuideNotReady by remember { mutableStateOf(false) }
+    var pendingInstall by remember { mutableStateOf<(() -> Unit)?>(null) }
     val device = remember { DeviceSnapshot.current() }
     val context = LocalContext.current
     val view = LocalView.current
@@ -432,8 +435,36 @@ private fun RootApp(
                 FilledTonalButton(onClick = {
                     clickHaptic(view)
                     showInstallConfirmation = false
-                    openInstaller(selectedProfile?.profileId)
-                    selectedProfile = null
+                    // v0.2.35+: 安装前主动检查 Shizuku 就绪状态。
+                    // exploit 引擎依赖 shell UID 权限（createDexMirror 等），未启用/未就绪
+                    // Shizuku 时以 untrusted_app 权限运行会失败，这里提前引导而不是静默失败。
+                    val proceed: () -> Unit = {
+                        openInstaller(selectedProfile?.profileId)
+                        selectedProfile = null
+                    }
+                    when {
+                        shizukuMode -> {
+                            scope.launch {
+                                val running = ShizukuController.pingUntilRunning()
+                                val granted = ShizukuController.isGranted()
+                                if (running && granted) {
+                                    proceed()
+                                } else {
+                                    // 未就绪或未授权：引导用户去 Shizuku 管理器启动/授权，
+                                    // 避免在此自动 requestPermission（context/时序可能不稳定）。
+                                    shizukuGuideNotReady = true
+                                    pendingInstall = proceed
+                                    showShizukuGuideDialog = true
+                                }
+                            }
+                        }
+                        else -> {
+                            // 未启用 Shizuku：提示建议启用，但允许用户继续尝试
+                            shizukuGuideNotReady = false
+                            pendingInstall = proceed
+                            showShizukuGuideDialog = true
+                        }
+                    }
                 }) {
                     Text(stringResource(R.string.action_confirm))
                 }
@@ -444,6 +475,64 @@ private fun RootApp(
                     showInstallConfirmation = false
                 }) {
                     Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
+    if (showShizukuGuideDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showShizukuGuideDialog = false
+                pendingInstall = null
+            },
+            icon = { Icon(Icons.Rounded.VerifiedUser, contentDescription = null) },
+            title = {
+                DialogDimAmount(0.34f)
+                Text(
+                    stringResource(
+                        if (shizukuGuideNotReady) {
+                            R.string.shizuku_guide_not_ready_title
+                        } else {
+                            R.string.shizuku_guide_recommended_title
+                        },
+                    ),
+                )
+            },
+            text = {
+                Text(
+                    stringResource(
+                        if (shizukuGuideNotReady) {
+                            R.string.shizuku_guide_not_ready_body
+                        } else {
+                            R.string.shizuku_guide_recommended_body
+                        },
+                    ),
+                )
+            },
+            confirmButton = {
+                FilledTonalButton(onClick = {
+                    clickHaptic(view)
+                    showShizukuGuideDialog = false
+                    // 引导用户去打开 Shizuku 管理器，稍后回来继续
+                    val proceed = pendingInstall
+                    pendingInstall = null
+                    if (proceed != null) {
+                        openShizukuManager(context)
+                    }
+                }) {
+                    Text(stringResource(R.string.action_open_shizuku))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    clickHaptic(view)
+                    showShizukuGuideDialog = false
+                    val proceed = pendingInstall
+                    pendingInstall = null
+                    proceed?.invoke()
+                }) {
+                    Text(stringResource(R.string.action_continue_anyway))
                 }
             },
         )

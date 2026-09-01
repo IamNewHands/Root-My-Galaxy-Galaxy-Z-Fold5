@@ -3,9 +3,8 @@
 Root-My-Galaxy 移植版（适配 Galaxy Z Fold 5），内置支持 **SM-F9460**（Z Fold 5 国行，q5q），
 内核 **5.15.189**（固件 **F9460ZCS9GZF1**），提供**临时 root**（bootstrap root + KernelSU）。
 
-> ⚠️ **尚未真机验证**：本仓库已适配 F9460ZCS9GZF1 的 payload 偏移，但尚未有
-> SM-F9460 + F9460ZCS9GZF1 固件的真机成功记录。请在真机上测试，成功后补充验证证据。
-> 临时 root，重启后失效，需重跑 App。
+> ✅ **已真机验证**：SM-F9460 + F9460ZCS9GZF1 固件临时 root 成功。
+> 临时 root，重启后失效，需重跑 App。已知问题与解决方法见 [docs/KNOWN-ISSUES.md](docs/KNOWN-ISSUES.md)。
 
 ## 📦 支持范围
 
@@ -34,7 +33,7 @@ Root-My-Galaxy 移植版（适配 Galaxy Z Fold 5），内置支持 **SM-F9460**
 1. **自动**：push 到 main 分支自动触发 GitHub Actions
 2. **手动**：仓库 → Actions → Build Fold5 F9460ZCS9GZF1 APK → Run workflow
 
-产物在 Actions 的 `rmg-f9460-zcs9gzf1-apk` artifact 下载（保留 14 天）。
+产物在 Actions 的 `RootMyGalaxy-F9460ZCS9GZF1` artifact 下载（保留 14 天）。
 
 ## 🎯 同机型（SM-F9460, 固件 F9460ZCS9GZF1）直接引用方法
 
@@ -59,5 +58,5 @@ curl -LO https://raw.githubusercontent.com/IamNewHands/rmg-f731u/main/support/ta
 
 - 仅适用于 **SM-F9460 + F9460ZCS9GZF1 固件**（其他 F946 型号/固件需重新适配）
 - **临时 root**，重启后失效，需要 root 时重新运行 App（约 10 秒）
-- 使用 Shizuku 时需 **root 模式启动**（否则 createDexMirror 类系统调用 UID 校验失败）
+- 需启用 Shizuku 才能 root 成功（exploit 引擎依赖 shell 权限）；App 会在安装前主动引导
 - 风险自负

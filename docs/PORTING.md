@@ -37,9 +37,12 @@ tools/patch_payload.py                               # 通用 payload 补丁工�
 2. 经 `q5q → F731U` 补丁（符号偏移 +0x40，详见旧版 spec）得到 **F731U 基准**（md5 `3c82d4f6...`）
 3. App 运行时 `PayloadRepository.patchF9460Zcs9Gzf1()` 把 F731U 基准 patch 为 **F9460ZCS9GZF1** 的符号偏移（15 处字节补丁）
 
-**当前状态**：⚠️ **F9460ZCS9GZF1 的 patch 偏移尚未真机验证**。
+**当前状态**：✅ **F9460ZCS9GZF1 的 patch 偏移已真机验证**（临时 root 成功）。
 闭源引擎自带 `verifying-kernel-access` 自校验阶段，偏移错误时会**安全拦截**（不 panic），
-但也**不会成功**。真机是否成功取决于偏移是否匹配 F9460ZCS9GZF1 的实际 BTF 布局。
+真机成功即证明偏移与 F9460ZCS9GZF1 的实际 BTF 布局匹配。
+
+> 已知问题（如必须启用 Shizuku、KernelSU Manager 版本不匹配）见
+> [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md)。
 
 ### 3.1 补丁后验证
 
