@@ -22,8 +22,23 @@ pip3 install --quiet --break-system-packages lz4 vmlinux-to-elf 2>/dev/null || \
 
 echo "==> [2/6] 解 AP 包，取出 boot.img.lz4 ..."
 # AP 是 tar.md5；用 tar 直接解（tar 会忽略 .md5 尾部校验）
-tar -xf "$AP" -C "$OUT" boot.img.lz4 2>/dev/null || \
-  tar -xf "$AP" -C "$OUT" ./boot.img.lz4
+rm -f "$OUT/boot.img.lz4"
+# 方法1：标准顶层路径
+tar -xf "$AP" -C "$OUT" boot.img.lz4 2>/dev/null || true
+# 方法2：若顶层没有，从整个 tar 里搜 boot.img.lz4 的确切路径
+if [ ! -f "$OUT/boot.img.lz4" ]; then
+  echo "  (顶层无 boot.img.lz4，正在从 tar 中搜索 ...)"
+  fname=$(tar -tf "$AP" 2>/dev/null | grep -iE '(^|/)boot\.img\.lz4$' | head -1)
+  if [ -n "$fname" ]; then
+    tar -xf "$AP" -C "$OUT" "$fname"
+    # 保持输出文件名为 boot.img.lz4
+    mv -f "$OUT/$(basename "$fname")" "$OUT/boot.img.lz4" 2>/dev/null || true
+  fi
+fi
+if [ ! -f "$OUT/boot.img.lz4" ]; then
+  echo "错误：未能从 AP 包中找到 boot.img.lz4" >&2
+  exit 1
+fi
 ls -la "$OUT/boot.img.lz4"
 
 echo "==> [3/6] 解压 boot.img.lz4 -> boot.img，并切出 kernel Image ..."
