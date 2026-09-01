@@ -168,8 +168,8 @@ class PayloadRepository(private val context: Context) {
     }
 
     companion object {
-        private const val COMMIT_API_URL = "https://api.github.com/repos/youyoudezhuzhu/rmg-f731u/git/ref/heads/main"
-        private const val RAW_REPOSITORY = "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u"
+        private const val COMMIT_API_URL = "https://api.github.com/repos/IamNewHands/rmg-f731u/git/ref/heads/main"
+        private const val RAW_REPOSITORY = "https://cdn.jsdelivr.net/gh/IamNewHands/rmg-f731u"
         private const val MUTABLE_RAW_PREFIX = "$RAW_REPOSITORY@main/"
         private const val MAX_COMMIT_RESPONSE_BYTES = 16 * 1024
         private const val MAX_MANIFEST_BYTES = 256 * 1024

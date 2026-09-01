@@ -2,31 +2,12 @@
  "schemaVersion": 3,
  "payloads": [
   {
-   "payloadId": "f731u-F731USQS8GZF1",
-   "displayName": "Galaxy Z Flip 5 | Kernel 5.15.189",
-   "models": [
-    "SM-F731U",
-    "SM-F731U1",
-    "SM-F731W",
-    "SM-F731B",
-    "SM-F731N",
-    "SM-F7310",
-    "SM-F731Q",
-    "SM-F731E",
-    "SM-F731T",
-    "SM-F731V"
-   ],
-   "kernelVersions": [
-    "5.15.189"
-   ],
-   "exploit": {
-    "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/artifacts/f731u-F731USQS8GZF1/cve-2026-43499-app.so",
-    "size": 131072
-   },
-   "kernelsu": {
-    "url": "https://cdn.jsdelivr.net/gh/youyoudezhuzhu/rmg-f731u@main/kernelsu/ksud-f731u-kdp",
-    "size": 6756208
-   }
+   "payloadId": "q5q-f9460-zcs9gzf1",
+   "displayName": "Galaxy Z Fold5 | SM-F9460 | F9460ZCS9GZF1 | Kernel 5.15.189",
+   "models": ["SM-F9460"],
+   "kernelVersions": ["5.15.189"],
+   "exploit": {"url": "https://cdn.jsdelivr.net/gh/IamNewHands/rmg-f731u@main/app-src/app/src/main/assets/cve-2026-43499-app.so", "size": 131072},
+   "kernelsu": {"url": "https://cdn.jsdelivr.net/gh/IamNewHands/rmg-f731u@main/app-src/app/src/main/assets/ksud-f731u-kdp", "size": 6756208}
   }
  ]
 }

@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "RootMyGalaxy"
+rootProject.name = "Root-My-Galaxy Galaxy Z Fold 5"
 include(":app")

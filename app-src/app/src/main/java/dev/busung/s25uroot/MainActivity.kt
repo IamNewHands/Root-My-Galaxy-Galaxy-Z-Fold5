@@ -249,7 +249,7 @@ private const val KERNEL_SU_MANAGER_URL =
 private const val KERNEL_SU_MANAGER_PACKAGE = "me.weishu.kernelsu"
 private const val KERNEL_SU_HOME_URL = "https://kernelsu.org/"
 private const val SHIZUKU_MANAGER_PACKAGE = "moe.shizuku.manager"
-private const val SHIZUKU_MANAGER_URL = "https://github.com/thedjchi/Shizuku/releases/"
+private const val SHIZUKU_MANAGER_URL = "https://github.com/RikkaApps/Shizuku/releases/"
 
 private fun isKernelSuManagerInstalled(context: Context): Boolean =
     context.packageManager.getLaunchIntentForPackage(KERNEL_SU_MANAGER_PACKAGE) != null

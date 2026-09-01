@@ -1,64 +1,63 @@
-# Root-My-Galaxy F731U (Galaxy Z Flip 5 美版) 定制 APK
+# Root-My-Galaxy Galaxy Z Fold 5
 
-Root-My-Galaxy 移植版，内置支持 **SM-F731U/DS**（Z Flip 5 美版 T-Mobile 运营商锁），
-内核 **5.15.189-android13-8-33404244-abF731USQS8GZF1**（固件 F731USQS8GZF1）。
+Root-My-Galaxy 移植版（适配 Galaxy Z Fold 5），内置支持 **SM-F9460**（Z Fold 5 国行，q5q），
+内核 **5.15.189**（固件 **F9460ZCS9GZF1**），提供**临时 root**（bootstrap root + KernelSU）。
 
-> ✅ **2026-08-12 真机验证成功**：v0.2.34 首次尝试即 `temporary-root-ready`（bootstrap root + KernelSU 启用）。
-> 注意：临时 root，重启后失效，需重跑 App。
-> 📸 验证证据：[KernelSU 管理器截图](docs/SM-F731U-F731USQS8GZF1.md)
+> ⚠️ **尚未真机验证**：本仓库已适配 F9460ZCS9GZF1 的 payload 偏移，但尚未有
+> SM-F9460 + F9460ZCS9GZF1 固件的真机成功记录。请在真机上测试，成功后补充验证证据。
+> 临时 root，重启后失效，需重跑 App。
 
-## 📦 Release（保留成功版本）
+## 📦 支持范围
 
-| 版本 | 状态 | 说明 |
-|---|---|---|
-| v0.2.36 | ✅ 最新 | 修复第二次运行报 "bundled exploit missing"（chmod 0444 只读导致重写失败） |
-| v0.2.35 | ✅ | 修复更新检查误报（AppUpdater 指向本仓库） |
-| v0.2.34 | ✅ 首次成功 | Shizuku 分支补 P0 env → temporary-root-ready 零重启 |
-
-下载：https://github.com/youyoudezhuzhu/rmg-f731u/releases
+| 项目 | 值 |
+|---|---|
+| 设备 | Samsung SM-F9460（Galaxy Z Fold 5 国行，q5q） |
+| 固件 | F9460ZCS9GZF1 |
+| 内核 | 5.15.189-android13-8 |
+| 系统 | Android 16 (API 36) |
+| ABI | arm64-v8a |
 
 ## 📁 仓库结构
 
-- `app-src/` — 改造后的 Root-My-Galaxy app 源码（含全部 assets）
-  - `app-src/app/src/main/assets/cve-2026-43499-app.so` — **最终版 exploit payload（131,072B，md5 `3c82d4f678bd58846facf3e4ad356a33`）**，APK 实际打包用
-  - `app-src/app/src/main/assets/ksud-f731u-kdp` — KernelSU ksud（6.7MB，内嵌 .ko）
-  - `app-src/app/src/main/assets/targets-v3.json` — 设备支持清单
-  - `app-src/app/src/main/jniLibs/arm64-v8a/libcve43499root.so` — root helper（23KB）
-- `artifacts/f731u-F731USQS8GZF1/` — 同款 payload（与 assets 同步，md5 一致）——**同机型直接引用此文件**
-- `support/` — targets-v3.json + payload（与 artifacts 同步）
-- `kernelsu/` — KernelSU 模块与 ksud
+- `app-src/` — Root-My-Galaxy app 源码（含全部 assets）
+  - `app-src/app/src/main/assets/cve-2026-43499-app.so` — exploit payload（131,072B，md5 `3c82d4f678bd58846facf3e4ad356a33`，F731U 基准 + 运行时 patch 为 F9460ZCS9GZF1 偏移）
+  - `app-src/app/src/main/assets/ksud-f731u-kdp` — KernelSU ksud（6.5MB，内嵌 .ko）
+  - `app-src/app/src/main/assets/targets-v3.json` — 设备支持清单（仅 F9460）
+  - `app-src/app/src/main/jniLibs/arm64-v8a/libcve43499root.so` — root helper
+- `kernelsu/android13-5.15.189_kernelsu.ko` — KernelSU 内核模块（5.15.189，KDP/RKP/DEFEX patch）
+- `support/targets-v3.json` — 设备支持清单（与 assets 同步）
+- `tools/` — payload 补丁工具
 - `.github/workflows/build-apk.yml` — GitHub Actions 云端编译
-
-## 🎯 同机型（SM-F731U/DS, 固件 F731USQS8GZF1）直接引用方法
-
-```
-# exploit payload（CVE-2026-43499, F731U BTF 偏移已打）
-curl -LO https://raw.githubusercontent.com/youyoudezhuzhu/rmg-f731u/main/artifacts/f731u-F731USQS8GZF1/cve-2026-43499-app.so
-
-# 设备支持清单
-curl -LO https://raw.githubusercontent.com/youyoudezhuzhu/rmg-f731u/main/support/targets-v3.json
-```
-
-其他机型：参照 `app-src/app/src/main/assets/targets-v3.json` 格式新增 profile，
-payload 需按目标机型 BTF 重新计算偏移（见 `app-src/app/src/main/cpp/native_probe.c`）。
 
 ## 🔧 构建 APK
 
 1. **自动**：push 到 main 分支自动触发 GitHub Actions
-2. **手动**：仓库 → Actions → Build F731U APK → Run workflow
+2. **手动**：仓库 → Actions → Build Fold5 F9460ZCS9GZF1 APK → Run workflow
 
-产物在 Actions 的 `rmg-f731u-apk` artifact 下载（保留 14 天）。
+产物在 Actions 的 `rmg-f9460-zcs9gzf1-apk` artifact 下载（保留 14 天）。
 
-## 📄 产物来源
+## 🎯 同机型（SM-F9460, 固件 F9460ZCS9GZF1）直接引用方法
 
-- exploit: Root-My-Galaxy-Payloads 移植，F731U 自身 BTF 偏移（CVE-2026-43499）
-- kernelsu.ko: KernelSU v3.2.5 + 三星 KDP/RKP/DEFEX patch，DDK android13-5.15 编译
-- ksud: KernelSU v3.2.5 userspace Rust 交叉编译（NDK r27c）
-- root helper: F731U 编译版（已替换 app 内默认 helper）
+```
+# exploit payload
+curl -LO https://raw.githubusercontent.com/IamNewHands/rmg-f731u/main/app-src/app/src/main/assets/cve-2026-43499-app.so
+
+# KernelSU daemon
+curl -LO https://raw.githubusercontent.com/IamNewHands/rmg-f731u/main/app-src/app/src/main/assets/ksud-f731u-kdp
+
+# 设备支持清单
+curl -LO https://raw.githubusercontent.com/IamNewHands/rmg-f731u/main/support/targets-v3.json
+```
+
+## 🔬 Payload 适配说明
+
+- payload 基准来自 `q5q-F9460TBS9GZF1`（s9180-root-kit 多机型包），经 `q5q → F731U` 补丁得到 F731U 基准（md5 `3c82d4...`），
+  App 运行时再通过 `PayloadRepository.patchF9460Zcs9Gzf1()` 把 F731U 基准 patch 为 **F9460ZCS9GZF1** 的符号偏移。
+- 详细方法论见 [docs/PORTING.md](docs/PORTING.md)。
 
 ## ⚠️ 注意
 
-- 仅适用于 **SM-F731U/DS + F731USQS8GZF1 固件**（其他 F731 型号/固件需重新适配）
-- 临时 root，**重启后失效**，需要 root 时重新运行 App（10 秒）
+- 仅适用于 **SM-F9460 + F9460ZCS9GZF1 固件**（其他 F946 型号/固件需重新适配）
+- **临时 root**，重启后失效，需要 root 时重新运行 App（约 10 秒）
 - 使用 Shizuku 时需 **root 模式启动**（否则 createDexMirror 类系统调用 UID 校验失败）
 - 风险自负
