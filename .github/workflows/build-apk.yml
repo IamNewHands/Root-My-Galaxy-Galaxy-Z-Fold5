@@ -32,9 +32,14 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew :app:assembleDebug --no-daemon
+      - name: Rename APK
+        run: |
+          mkdir -p output
+          cp app-src/app/build/outputs/apk/debug/app-debug.apk output/RootMyGalaxy-F9460ZCS9GZF1.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: rmg-f9460-zcs9gzf1-apk
-          path: app-src/app/build/outputs/apk/debug/app-debug.apk
+          name: RootMyGalaxy-F9460ZCS9GZF1
+          path: output/RootMyGalaxy-F9460ZCS9GZF1.apk
+          if-no-files-found: error
           retention-days: 14
